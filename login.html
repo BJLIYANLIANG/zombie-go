@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="base.css">
+    <script src="setrem.js"></script>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <style>
+        .container{
+            position: absolute;
+            height: 100%;
+            left: 0;
+            top: 0;
+            text-align: center;
+        }
+        #playPage{
+            display: none;
+        }
+        .cover{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            left: 0;
+            top: 0;
+        }
+        .login-panel{
+            position: absolute;
+            /* border: solid 1px black; */
+            width: 100%;
+            height: 200px;
+            text-align: center;
+            top: 20%;
+        }
+        .login-panel input{
+            width: 9rem;
+            height: 45px;
+            border: solid 1px #999;
+            outline: none;
+            font-size: 24px;
+            text-align: center;
+        }
+        #enterBtn{
+            width: 9rem;
+            height: 45px;
+            background-color: aqua;
+            margin-top: 10px;
+            /* border-radius: 10px; */
+            background-color: #f00;
+            color: #fff;
+            border: solid 1px #f00;
+            font-size: 22px;
+        }
+        #gobtn{
+            width: 9rem;
+            height: 9rem;
+            background-color: #f00;
+            user-select: none;
+            -ms-user-select: none;
+            text-align: center;
+            line-height: 9rem;
+            color: #fff;
+            font-size: 3rem;
+            border-radius: 50%;
+            margin: 0 auto;
+            position: absolute;
+            top: 50%;
+            margin-top: -4.5rem;
+            left: 50%;
+            margin-left: -4.5rem;
+            
+        }
+        .normal{
+            box-shadow: 5px 5px 8px #999;
+        }
+        .active{
+            box-shadow: -5px -5px 8px #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginPage">
+        <div class="cover">
+            <div class="login-panel">
+                <h1>登陆游戏</h1>
+                <div>
+                    <input type="text"  id="username">
+                </div>
+                <button id="enterBtn"> 进入游戏 </button>
+            </div>
+        </div>
+    </div>
+    <div class="container" id="playPage">
+        <div class="cover">
+            <div id="gobtn">Go</div>
+        </div>
+    </div>
+    <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+    <script>
+        
+        $("#enterBtn").on('click',function(){
+           
+            var username = $("#username").val()
+            if(username){
+                $("#loginPage").hide();
+                $("#playPage").show()
+            }
+        })
+
+        $("#gobtn").on('click',function(){
+           console.log('click...')
+        })
+    
+
+
+    </script>
+</body>
+</html>
