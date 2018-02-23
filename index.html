@@ -4,29 +4,203 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>go-go-go</title>
-  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <title>zombie run!!!</title>
+  <script src="node_modules/jquery/dist/jquery.min.js"></script>
   <link rel="stylesheet" href="./base.css">
   <style media="screen">
     .container{
       height: 100%; 
     }
-    #hero{
-      width: 50px;height: 50px;
+    .hero{
+      width: 84px;height: 144px;
       position: absolute;
+      text-align: center;
+      color:#fff;
+    }
+    #qrcode{
+      width: 128px;height: 128px;
+      position: absolute;
+      z-index: 2;
+      right: 20px;
+      top: 0;
+    }
+    #map{width: 100%;height: 100%;
+    background-image: url(bg.jpg);
+    z-index: 200;
+    }
+    #numUsers{
+      width: 200px;height: 30px;
+      text-align: center;line-height: 30px;
+      position: absolute;
+      right: 150px;
+      top: 20px;
+      font-size: 24px;color: #fff;
     }
   </style>
 </head>
 <body>
   
-  <div class="container">
-
-      <div id="hero" class="bg-red border">111</div>
+  <div>
+    <audio src="bgm.mp3" id="bgm" loop="loop"></audio>
   </div>
-  <script src="node_modules/socket.io-client/dist/socket.io.js"></script>
+  <div class="container">
+      <div id="numUsers">玩家在线：<span>0</span></div>
+      <div id="map"></div>
+      <div id="qrcode"></div>
+  </div>
+  <script src="qrcode.min.js"></script>
+  <script src="/node_modules/socket.io-client/dist/socket.io.js"></script>
   <script>
   
+  var bgm = document.getElementById('bgm');
+
+  bgm.play();
+
+  var socket = io('http://localhost:8080');
+  var username;
+  var players = [];
+
+  var suns = [];
+
+
+  function Player(data){
+    var hero = document.createElement("div");
+    hero.setAttribute('class','hero');
+    hero.setAttribute("data-id",data.id);
+    hero.textContent = data.username;
+    hero.style.zIndex = 100;
+    var randColor = Math.floor(Math.random()*0xffffff).toString(16);
+    hero.style.top = players.length*80 + 'px';
+    var img = document.createElement("img");
+    img.src = "zombie.gif";
+    img.style.transform = "scaleX(-1)";
+    hero.appendChild(img);
+    
+    this.x = 0;
+    this.y = players.length*80;
+    this.speed = 3;
+    this.username = data.username;
+    this.node = hero;
+  }
+  Player.prototype.move = function(step){
+    // console.log('move',step);
+    this.x = this.node.offsetLeft + step;
+    this.node.style.left = this.node.offsetLeft + step + 'px';
+  }
+  Player.prototype.moveVertical = function(step){
+    this.y = this.node.offsetTop + step;
+    this.node.style.top = this.node.offsetTop + step + 'px';
+  }
+  Player.prototype.die = function(){
+  }
+  socket.on('connection', function (data) {
+    var loginurl = "http://" + data.ip + ":"+location.port+"/login.html";
+    new QRCode(document.getElementById("qrcode"), {
+      text:loginurl,
+      width: 128,
+      height: 128
+    });
+    console.log('>>>>>',data.msg,"ip:",data.ip);
+  });
+
+  socket.on('someone-online',function(data){
+    console.log(">>>>",data.username)
+    
+    var hero = new Player(data);
+    console.log(hero)
+    $("#map").append(hero.node);
+    players.push(hero);
+    $("#numUsers span").text(players.length);
+  })
+
+  socket.on('player-go',function(data){
+    
+    for(var i = 0; i < players.length;i++){
+      var hero = players[i];
+      if(hero.username == data.username){
+          hero.move(data.step*hero.speed);         
+      }
+    }
+
+  })
+
+  socket.on('go-vertical',function(data){
+    // for(var i = 0; i < players.length;i++){
+    //   var hero = players[i];
+    //   if(hero.username == data.username){
+    //       hero.moveVertical(data.step*hero.speed);         
+    //   }
+    // }
+    $(".hero").each(function(hero){
+        if($(this).text() == data.username){
+          $(this).css('top',$(this).offset().top + data.step*3 + 'px');
+        }
+    })
+  })
+
+  socket.on('player-left',function(data){
+      console.log("玩家离线：",data)
+      // for(var i = 0; i < players.length;i++){
+      //    var hero = players[i];
+      //     if(hero.getAttribute('pid') == data.id){
+      //       // $(this).remove();
+      //       // players.splice(i,1)
+      //       $("#numUsers span").text(players.length);
+      //     }
+      // }
+      $(".hero").each(function(h,i){
+          if($(this).data('pid') == data.id){
+            $(this).remove();
+            players.splice(i,1)
+            $("#numUsers span").text(players.length);
+          }
+      })
+
+  })
+
+  //随机太阳
+
+  var winWidth = screen.width;
+  var winHeight = screen.height;
+
+  // setInterval(function(){
+  //   createSun();
+  // },3000)
+
+  function createSun(){
+    console.log('create sun....')
+    if(suns.length < 5){
+      var s = document.createElement('img');
+      s.src = "sun.png";
+      s.style.position = 'absolute';
+      s.style.width = 50 + 'px';
+      s.style.height = 50 + 'px';
+      s.style.left = Math.random()* (winWidth-200) + 100 + 'px';
+      s.style.top = Math.random() * (winHeight-200) + 100 + 'px';
+      suns.push(s);
+      $("#map").append(s);
+    }
+    
+  }
   
+  //判断僵尸是否吃到太阳
+  // setInterval(function(){
+  //     for(var i = 0; i < players.length;i++){
+  //       var p = players[i];
+  //       for(var j = 0;j < suns.length;i++){
+  //           var sun = suns[j];
+  //           if( collision(p,sun) ){
+
+  //           }
+  //       }
+  //     }
+  // },500)
+
+  function collision(a,b){
+    if(b.x+b.width > a.x && b.x < a.x+a.width && b.y < a.y+a.height && b.y+ b.height > a.y){
+      return true;
+    }
+  }
   </script>  
 </body>
 </html>
